@@ -129,14 +129,13 @@ function App() {
     return () => clearInterval(interval);
   }, [fetchAllData]);
 
-  // Action handlers
   const discoverSpeakers = async () => {
     try {
       const response = await axios.get(`${API}/speakers/discover`);
-      alert(`${response.data.message}`);
+      showAlert(`${response.data.message}`, 'success');
       fetchSpeakers();
     } catch (error) {
-      alert('Failed to discover speakers');
+      showAlert('Échec de la découverte des enceintes', 'error');
     }
   };
 
@@ -146,9 +145,9 @@ function App() {
       await axios.post(`${API}/zones`, newZone);
       setNewZone({ name: '', description: '', speaker_ids: [] });
       fetchZones();
-      alert('Zone created successfully!');
+      showAlert('Zone créée avec succès !', 'success');
     } catch (error) {
-      alert('Failed to create zone');
+      showAlert('Échec de la création de la zone', 'error');
     }
   };
 
@@ -165,9 +164,9 @@ function App() {
       await axios.post(`${API}/sources`, sourceData);
       setNewSource({ name: '', type: 'local_file', url: '', file_path: '' });
       fetchSources();
-      alert('Audio source created successfully!');
+      showAlert('Source audio créée avec succès !', 'success');
     } catch (error) {
-      alert('Failed to create audio source');
+      showAlert('Échec de la création de la source audio', 'error');
     }
   };
 
@@ -177,9 +176,9 @@ function App() {
       await axios.post(`${API}/sessions`, newSession);
       setNewSession({ name: '', zone_id: '', source_id: '' });
       fetchSessions();
-      alert('Audio session started successfully!');
+      showAlert('Session audio démarrée avec succès !', 'success');
     } catch (error) {
-      alert('Failed to start audio session');
+      showAlert('Échec du démarrage de la session audio', 'error');
     }
   };
 
@@ -187,8 +186,9 @@ function App() {
     try {
       await axios.put(`${API}/sessions/${sessionId}/control`, { action });
       fetchSessions();
+      showAlert(`Session ${action === 'play' ? 'démarrée' : action === 'pause' ? 'mise en pause' : 'arrêtée'}`, 'success');
     } catch (error) {
-      alert(`Failed to ${action} session`);
+      showAlert(`Échec de l'action ${action} sur la session`, 'error');
     }
   };
 
@@ -196,43 +196,44 @@ function App() {
     try {
       await axios.put(`${API}/speakers/${speakerId}/volume`, { volume });
       fetchSpeakers();
+      showAlert(`Volume réglé à ${volume}%`, 'success');
     } catch (error) {
-      alert('Failed to set volume');
+      showAlert('Échec du réglage du volume', 'error');
     }
   };
 
   const deleteZone = async (zoneId) => {
-    if (window.confirm('Are you sure you want to delete this zone?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) {
       try {
         await axios.delete(`${API}/zones/${zoneId}`);
         fetchZones();
-        alert('Zone deleted successfully!');
+        showAlert('Zone supprimée avec succès !', 'success');
       } catch (error) {
-        alert('Failed to delete zone');
+        showAlert('Échec de la suppression de la zone', 'error');
       }
     }
   };
 
   const deleteSource = async (sourceId) => {
-    if (window.confirm('Are you sure you want to delete this audio source?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette source audio ?')) {
       try {
         await axios.delete(`${API}/sources/${sourceId}`);
         fetchSources();
-        alert('Audio source deleted successfully!');
+        showAlert('Source audio supprimée avec succès !', 'success');
       } catch (error) {
-        alert('Failed to delete audio source');
+        showAlert('Échec de la suppression de la source audio', 'error');
       }
     }
   };
 
   const deleteSession = async (sessionId) => {
-    if (window.confirm('Are you sure you want to stop and delete this session?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir arrêter et supprimer cette session ?')) {
       try {
         await axios.delete(`${API}/sessions/${sessionId}`);
         fetchSessions();
-        alert('Session stopped and deleted successfully!');
+        showAlert('Session arrêtée et supprimée avec succès !', 'success');
       } catch (error) {
-        alert('Failed to delete session');
+        showAlert('Échec de la suppression de la session', 'error');
       }
     }
   };
