@@ -48,6 +48,11 @@ function App() {
   // Alert system state
   const [alerts, setAlerts] = useState([]);
 
+  // Form states
+  const [newZone, setNewZone] = useState({ name: '', description: '', speaker_ids: [] });
+  const [newSource, setNewSource] = useState({ name: '', type: 'local_file', url: '', file_path: '' });
+  const [newSession, setNewSession] = useState({ name: '', zone_id: '', source_id: '' });
+
   const showAlert = (message, type = 'success') => {
     const id = Date.now();
     const newAlert = { id, message, type };
