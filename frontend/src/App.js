@@ -445,7 +445,11 @@ function App() {
 
             {speakers.length === 0 && (
               <div className="text-center py-12">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                </svg>
                 <p className="text-gray-400 mb-4">Aucune enceinte détectée</p>
+                <p className="text-sm text-gray-500 mb-6">Découvrez automatiquement les enceintes Axis disponibles sur votre réseau</p>
                 <button
                   onClick={discoverSpeakers}
                   className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded font-medium"
