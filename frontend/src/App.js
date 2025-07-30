@@ -45,10 +45,23 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Form states
-  const [newZone, setNewZone] = useState({ name: '', description: '', speaker_ids: [] });
-  const [newSource, setNewSource] = useState({ name: '', type: 'local_file', url: '', file_path: '' });
-  const [newSession, setNewSession] = useState({ name: '', zone_id: '', source_id: '' });
+  // Alert system state
+  const [alerts, setAlerts] = useState([]);
+
+  const showAlert = (message, type = 'success') => {
+    const id = Date.now();
+    const newAlert = { id, message, type };
+    setAlerts(prev => [...prev, newAlert]);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+      setAlerts(prev => prev.filter(alert => alert.id !== id));
+    }, 4000);
+  };
+
+  const removeAlert = (id) => {
+    setAlerts(prev => prev.filter(alert => alert.id !== id));
+  };
 
   // Fetch data functions
   const fetchSpeakers = useCallback(async () => {
