@@ -333,9 +333,20 @@ function App() {
 
             {/* Active Sessions */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Sessions actives</h3>
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Sessions actives
+              </h3>
               {sessions.length === 0 ? (
-                <p className="text-gray-400">Aucune session active</p>
+                <div className="text-center py-8">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                  </svg>
+                  <p className="text-gray-400">Aucune session active</p>
+                  <p className="text-sm text-gray-500 mt-1">Créez une session dans l'onglet Sessions</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {sessions.map((session) => {
