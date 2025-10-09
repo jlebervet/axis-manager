@@ -1,0 +1,27 @@
+name: Build and Push Docker Image to Docker Hub
+
+on:
+  push:
+    branches:
+      - main  # Déclenchement à chaque push sur la branche principale
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupération du code source
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Étape 2 : Connexion à Docker Hub
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Étape 3 : Construction de l'image Docker
+      - name: Build Docker image
+        run: docker build -t jlebervet/axis-manager:latest .
+
+      # Étape 4 : Push de l'image sur Docker Hub
+      - name: Push Docker image
+        run: docker push jlebervet/axis-manager:latest
