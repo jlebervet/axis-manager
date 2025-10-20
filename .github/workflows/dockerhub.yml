@@ -1,0 +1,90 @@
+name: Build & Push to Docker Hub
+
+on:
+  push:
+    branches: [ "main" ]           # Pousse 'latest' à chaque commit sur main
+    tags:     [ "v*", "V*" ]       # Pousse les tags de version (v1.2.3, etc.)
+  workflow_dispatch:               # Lancement manuel si besoin
+
+# Évite les builds concurrentes pour la même branche/tag
+concurrency:
+  group: dockerhub-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read               # lire le dépôt
+      # pas besoin de droits packages pour Docker Hub
+
+    env:
+      # ❗️Adaptez ces 2 lignes si vous changez le nom du repo Docker Hub
+      DOCKERHUB_USER: jlebervet
+      IMAGE_NAME: axis-manager     # dépôt Docker Hub: jlebervet/axis-manager (tout en minuscules)
+
+      # Chemins par défaut — modifiez si votre Dockerfile n'est pas à la racine
+      DOCKER_CONTEXT: .
+      DOCKERFILE: ./Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # QEMU + Buildx pour le multi-arch (amd64/arm64)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Métadonnées (tags & labels) générées automatiquement
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+
+      # Login Docker Hub (nécessite secrets)
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}  # = jlebervet (ou votre compte)
+          password: ${{ secrets.DOCKERHUB_TOKEN }}     # token d'accès Docker Hub
+
+      # Build & Push multi-plateforme avec cache GHA
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.DOCKER_CONTEXT }}
+          file: ${{ env.DOCKERFILE }}
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # (Optionnel) Signature SBOM/attestations – décommentez si vous utilisez cosign
+      # - name: Install cosign
+      #   uses: sigstore/cosign-installer@v3
+      #
+      # - name: Sign image
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     cosign sign --yes ${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
