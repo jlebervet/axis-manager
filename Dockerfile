@@ -15,8 +15,9 @@
 # =============================================================================
 # STAGE 1 : CONSTRUCTION DU FRONTEND REACT
 # =============================================================================
-# On utilise Node.js 18 pour compiler l'application React avec Yarn et CRACO
-FROM node:18-alpine AS frontend-builder
+# On utilise Node.js 20 pour compiler l'application React avec Yarn et CRACO
+# Note : Node 20+ est requis pour react-router-dom@7
+FROM node:20-alpine AS frontend-builder
 
 # Définir le répertoire de travail pour le frontend
 WORKDIR /frontend
