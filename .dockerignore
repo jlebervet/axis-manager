@@ -1,0 +1,146 @@
+# =============================================================================
+# DOCKERIGNORE - FICHIERS À EXCLURE DU BUILD DOCKER
+# =============================================================================
+# Ce fichier liste tous les fichiers et dossiers à NE PAS inclure dans le
+# contexte de build Docker. Cela :
+# 1. Réduit la taille de l'image finale
+# 2. Accélère le temps de build
+# 3. Évite d'inclure des données sensibles ou inutiles
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# CONTRÔLE DE VERSION
+# -----------------------------------------------------------------------------
+.git
+.gitignore
+.gitattributes
+.github
+
+# -----------------------------------------------------------------------------
+# DÉPENDANCES (seront réinstallées dans le Dockerfile)
+# -----------------------------------------------------------------------------
+# Frontend
+frontend/node_modules
+frontend/.pnp
+frontend/.pnp.js
+
+# Backend
+backend/__pycache__
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env
+backend/venv
+backend/ENV
+backend/env.bak
+backend/venv.bak
+backend/.venv
+
+# -----------------------------------------------------------------------------
+# FICHIERS DE BUILD ET CACHE
+# -----------------------------------------------------------------------------
+# Frontend build outputs
+frontend/build
+frontend/dist
+frontend/.cache
+
+# Python cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# -----------------------------------------------------------------------------
+# ENVIRONNEMENT ET CONFIGURATION LOCALE
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+*.env
+
+# -----------------------------------------------------------------------------
+# LOGS
+# -----------------------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+backend/logs
+
+# -----------------------------------------------------------------------------
+# ÉDITEURS ET IDE
+# -----------------------------------------------------------------------------
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# TESTS ET COVERAGE
+# -----------------------------------------------------------------------------
+coverage
+.nyc_output
+backend/htmlcov
+backend/.coverage
+backend/.coverage.*
+backend_test.py
+frontend/src/**/*.test.js
+frontend/src/**/*.spec.js
+
+# -----------------------------------------------------------------------------
+# DOCUMENTATION ET FICHIERS DE DÉVELOPPEMENT
+# -----------------------------------------------------------------------------
+README.md
+CLAUDE.md
+*.md
+!README-DOCKER.md
+docs
+documentation
+
+# -----------------------------------------------------------------------------
+# DOCKER ET CI/CD (pas besoin dans l'image)
+# -----------------------------------------------------------------------------
+Dockerfile
+.dockerignore
+compose*.yaml
+.emergent
+
+# -----------------------------------------------------------------------------
+# FICHIERS TEMPORAIRES
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+tmp
+temp
+
+# -----------------------------------------------------------------------------
+# CERTIFICATS ET CLÉS (SÉCURITÉ)
+# -----------------------------------------------------------------------------
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets
+
+# -----------------------------------------------------------------------------
+# AUTRES
+# -----------------------------------------------------------------------------
+.editorconfig
+.prettierrc
+.prettierignore
+.eslintrc
+.eslintignore

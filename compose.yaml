@@ -1,0 +1,151 @@
+# =============================================================================
+# DOCKER COMPOSE - CONFIGURATION PRODUCTION
+# =============================================================================
+# Ce fichier définit tous les services nécessaires pour faire tourner
+# Axis Manager en production :
+# - app : L'application (frontend React + backend FastAPI)
+# - mongodb : La base de données MongoDB
+#
+# Pour démarrer : docker compose up -d
+# Pour arrêter : docker compose down
+# Pour voir les logs : docker compose logs -f
+# =============================================================================
+
+# =============================================================================
+# SERVICES
+# =============================================================================
+services:
+
+  # ---------------------------------------------------------------------------
+  # SERVICE : Application Axis Manager (Frontend + Backend)
+  # ---------------------------------------------------------------------------
+  app:
+    # Nom du conteneur (plus facile à identifier dans Portainer)
+    container_name: axis-manager-app
+
+    # Image à utiliser
+    # Option 1 : Utiliser l'image depuis Docker Hub (production)
+    image: jlebervet/axis-manager:latest
+
+    # Option 2 : Builder l'image localement (développement/test)
+    # Décommentez la ligne ci-dessous et commentez "image:" ci-dessus
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+
+    # Redémarrage automatique en cas de crash ou au démarrage du serveur
+    restart: unless-stopped
+
+    # Ports exposés : port_hote:port_conteneur
+    # Le port 80 du conteneur (Nginx) est accessible via le port 80 de l'hôte
+    ports:
+      - "80:80"
+
+    # Variables d'environnement pour l'application
+    # Ces variables sont injectées dans le conteneur et utilisées par le backend
+    environment:
+      # --- Base de données MongoDB ---
+      # URL de connexion à MongoDB (utilise le nom du service "mongodb" comme hostname)
+      MONGO_URL: mongodb://mongodb:27017
+
+      # Nom de la base de données
+      DB_NAME: axis_audio_dashboard
+
+      # --- API Axis Audio Manager Pro ---
+      # URL de base pour l'API Axis (HTTPS sur port 443)
+      AXIS_API_BASE_URL: ${AXIS_API_BASE_URL}
+
+      # Identifiants pour l'authentification Basic Auth
+      AXIS_API_USERNAME: ${AXIS_API_USERNAME}
+      AXIS_API_PASSWORD: ${AXIS_API_PASSWORD}
+
+      # Timeout pour les requêtes vers l'API Axis (en secondes)
+      AXIS_API_TIMEOUT: ${AXIS_API_TIMEOUT:-30}
+
+      # --- API Soundtrackyourbrand (optionnel) ---
+      # Identifiants pour le service de streaming STYB
+      STYB_CLIENT_ID: ${STYB_CLIENT_ID:-}
+      STYB_CLIENT_SECRET: ${STYB_CLIENT_SECRET:-}
+
+    # Dépendances : ce service attend que MongoDB soit démarré
+    # Note : depends_on attend seulement que le conteneur soit lancé,
+    # pas forcément que MongoDB soit prêt à accepter des connexions
+    depends_on:
+      - mongodb
+
+    # Réseau Docker pour la communication entre services
+    networks:
+      - axis-network
+
+    # Health check : vérifie que l'application répond correctement
+    # Portainer utilisera ces informations pour afficher l'état du service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ---------------------------------------------------------------------------
+  # SERVICE : Base de données MongoDB
+  # ---------------------------------------------------------------------------
+  mongodb:
+    # Nom du conteneur
+    container_name: axis-manager-mongodb
+
+    # Image officielle MongoDB version 7
+    image: mongo:7
+
+    # Redémarrage automatique
+    restart: unless-stopped
+
+    # Ports (optionnel en production, mais utile pour debug)
+    # Si vous voulez accéder à MongoDB depuis l'extérieur pour debug :
+    # Décommentez la ligne ci-dessous
+    # ports:
+    #   - "27017:27017"
+
+    # Variables d'environnement MongoDB
+    environment:
+      # Désactive l'authentification MongoDB (simplification pour usage local)
+      # En production critique, vous devriez activer l'authentification :
+      # MONGO_INITDB_ROOT_USERNAME: admin
+      # MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: axis_audio_dashboard
+
+    # Volume pour persister les données MongoDB
+    # IMPORTANT : Sans ce volume, toutes les données seraient perdues
+    # à chaque redémarrage du conteneur !
+    volumes:
+      - mongodb_data:/data/db
+
+    # Réseau Docker
+    networks:
+      - axis-network
+
+    # Health check : vérifie que MongoDB est prêt à accepter des connexions
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+# Définition des volumes Docker pour persister les données
+volumes:
+  # Volume pour les données MongoDB
+  # Ce volume est stocké sur l'hôte et survit aux redémarrages/suppressions de conteneurs
+  mongodb_data:
+    driver: local
+
+# =============================================================================
+# RÉSEAUX
+# =============================================================================
+# Définition du réseau Docker pour la communication entre services
+networks:
+  # Réseau interne pour que les services puissent communiquer entre eux
+  axis-network:
+    driver: bridge

@@ -27,7 +27,7 @@ jobs:
 
       # Chemins par défaut — modifiez si votre Dockerfile n'est pas à la racine
       DOCKER_CONTEXT: .
-      DOCKERFILE: ./Dockerfile
+      DOCKERFILE: ./Dockerfile     # Utilise le Dockerfile multi-stage (frontend React + backend FastAPI + Nginx)
 
     steps:
       - name: Checkout
