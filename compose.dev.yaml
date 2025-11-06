@@ -1,0 +1,182 @@
+# =============================================================================
+# DOCKER COMPOSE - CONFIGURATION DÉVELOPPEMENT
+# =============================================================================
+# Ce fichier définit un environnement de développement avec HOT-RELOAD :
+# - Les modifications du code sont immédiatement reflétées (pas de rebuild)
+# - Frontend : React dev server avec hot-reload (port 3000)
+# - Backend : Uvicorn avec --reload (port 8001)
+# - MongoDB : Base de données locale pour tests
+#
+# Pour démarrer : docker compose -f compose.dev.yaml up
+# Pour arrêter : docker compose -f compose.dev.yaml down
+# =============================================================================
+
+# =============================================================================
+# SERVICES
+# =============================================================================
+services:
+
+  # ---------------------------------------------------------------------------
+  # SERVICE : Frontend React (Mode développement avec hot-reload)
+  # ---------------------------------------------------------------------------
+  frontend:
+    # Nom du conteneur
+    container_name: axis-manager-frontend-dev
+
+    # Utiliser l'image Node.js pour exécuter le serveur de développement React
+    # Note : Node 20 requis pour react-router-dom@7
+    image: node:20-alpine
+
+    # Redémarrage automatique en cas de crash
+    restart: unless-stopped
+
+    # Répertoire de travail dans le conteneur
+    working_dir: /app
+
+    # Commande à exécuter au démarrage
+    # 1. Installer les dépendances si elles manquent (yarn install)
+    # 2. Lancer le serveur de développement avec hot-reload (yarn start)
+    command: sh -c "yarn install && yarn start"
+
+    # Ports exposés : le serveur dev React tourne sur le port 3000
+    ports:
+      - "3000:3000"
+
+    # Variables d'environnement pour le frontend
+    environment:
+      # URL du backend (utilisée par Axios dans le code React)
+      REACT_APP_BACKEND_URL: http://localhost:8001/api
+
+      # Désactiver le hot-reload si souhaité (mettre "true" pour désactiver)
+      DISABLE_HOT_RELOAD: false
+
+      # Désactiver la vérification du host pour React dev server
+      # (permet d'accéder au dev server depuis n'importe quelle IP)
+      DANGEROUSLY_DISABLE_HOST_CHECK: true
+
+      # Configurer WDS (Webpack Dev Server) pour fonctionner dans Docker
+      WDS_SOCKET_HOST: localhost
+      WDS_SOCKET_PORT: 3000
+
+    # Monter le code source local dans le conteneur
+    # IMPORTANT : Les modifications locales seront immédiatement visibles
+    volumes:
+      - ./frontend:/app
+      # Exclure node_modules pour éviter les conflits entre hôte et conteneur
+      - /app/node_modules
+
+    # Réseau Docker
+    networks:
+      - axis-network-dev
+
+    # stdin_open et tty permettent l'interaction avec le conteneur (utile pour debug)
+    stdin_open: true
+    tty: true
+
+  # ---------------------------------------------------------------------------
+  # SERVICE : Backend FastAPI (Mode développement avec auto-reload)
+  # ---------------------------------------------------------------------------
+  backend:
+    # Nom du conteneur
+    container_name: axis-manager-backend-dev
+
+    # Utiliser l'image Python pour exécuter Uvicorn avec --reload
+    image: python:3.11-slim
+
+    # Redémarrage automatique
+    restart: unless-stopped
+
+    # Répertoire de travail
+    working_dir: /app/backend
+
+    # Commande au démarrage
+    # 1. Installer les dépendances Python si elles manquent
+    # 2. Lancer Uvicorn avec --reload (redémarre automatiquement à chaque modification)
+    command: sh -c "pip install -q -r requirements.txt && uvicorn server:app --host 0.0.0.0 --port 8001 --reload"
+
+    # Ports exposés : le backend FastAPI tourne sur le port 8001
+    ports:
+      - "8001:8001"
+
+    # Variables d'environnement pour le backend
+    environment:
+      # --- Base de données MongoDB ---
+      MONGO_URL: mongodb://mongodb-dev:27017
+      DB_NAME: axis_audio_dashboard_dev
+
+      # --- API Axis (utiliser les variables d'environnement de l'hôte) ---
+      AXIS_API_BASE_URL: ${AXIS_API_BASE_URL}
+      AXIS_API_USERNAME: ${AXIS_API_USERNAME}
+      AXIS_API_PASSWORD: ${AXIS_API_PASSWORD}
+      AXIS_API_TIMEOUT: ${AXIS_API_TIMEOUT:-30}
+
+      # --- API STYB (optionnel) ---
+      STYB_CLIENT_ID: ${STYB_CLIENT_ID:-}
+      STYB_CLIENT_SECRET: ${STYB_CLIENT_SECRET:-}
+
+    # Monter le code source local
+    # IMPORTANT : Les modifications du code Python seront détectées et uvicorn redémarrera
+    volumes:
+      - ./backend:/app/backend
+
+    # Dépendances
+    depends_on:
+      - mongodb-dev
+
+    # Réseau Docker
+    networks:
+      - axis-network-dev
+
+  # ---------------------------------------------------------------------------
+  # SERVICE : MongoDB (Base de données de développement)
+  # ---------------------------------------------------------------------------
+  mongodb-dev:
+    # Nom du conteneur
+    container_name: axis-manager-mongodb-dev
+
+    # Image officielle MongoDB version 7
+    image: mongo:7
+
+    # Redémarrage automatique
+    restart: unless-stopped
+
+    # Port exposé (accessible depuis l'hôte pour debug avec MongoDB Compass par exemple)
+    ports:
+      - "27017:27017"
+
+    # Variables d'environnement
+    environment:
+      MONGO_INITDB_DATABASE: axis_audio_dashboard_dev
+
+    # Volume pour persister les données même en développement
+    # Cela évite de perdre les données de test à chaque redémarrage
+    volumes:
+      - mongodb_dev_data:/data/db
+
+    # Réseau Docker
+    networks:
+      - axis-network-dev
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  # Volume pour les données MongoDB de développement
+  mongodb_dev_data:
+    driver: local
+
+# =============================================================================
+# RÉSEAUX
+# =============================================================================
+networks:
+  # Réseau de développement (séparé du réseau de production)
+  axis-network-dev:
+    driver: bridge
