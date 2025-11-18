@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Use relative URL to leverage nginx proxy (production) or React dev proxy (development)
+const API = '/api';
 
 // Icon Components
 const PlayIcon = () => (
