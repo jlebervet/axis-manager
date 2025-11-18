@@ -98,6 +98,9 @@ COPY --from=backend-builder /root/.local /home/appuser/.local
 # Cela permet d'exécuter uvicorn et autres commandes Python installées
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+# Configurer PYTHONPATH pour que Python trouve les modules installés
+ENV PYTHONPATH=/home/appuser/.local/lib/python3.11/site-packages:$PYTHONPATH
+
 # Définir le répertoire de travail
 WORKDIR /app
 
