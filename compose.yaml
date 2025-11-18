@@ -44,6 +44,17 @@
 # STYB_CLIENT_SECRET      Client Secret pour Soundtrackyourbrand (optionnel)
 #                         Défaut : vide
 #
+# Variables PRÉCONFIGURÉES (pas besoin de les définir) :
+# -----------------------------------------------------
+# MONGO_URL               URL MongoDB (utilise le service "mongodb" interne)
+#                         Valeur fixe : mongodb://mongodb:27017
+#
+# DB_NAME                 Nom de la base de données
+#                         Valeur fixe : axis_audio_dashboard
+#
+# NOTE : Si vous voulez utiliser une MongoDB externe, remplacez les valeurs
+#        hardcodées dans la section "environment" par ${MONGO_URL} et ${DB_NAME}
+#
 # NOTE IMPORTANTE : Ne JAMAIS committer de fichier .env avec des secrets réels !
 # =============================================================================
 

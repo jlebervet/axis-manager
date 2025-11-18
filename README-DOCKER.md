@@ -285,6 +285,10 @@ Cliquez sur **+ Add environment variable** et ajoutez :
 | `STYB_CLIENT_ID` | (Optionnel) Client ID STYB | _(vide si non utilisé)_ |
 | `STYB_CLIENT_SECRET` | (Optionnel) Secret STYB | _(vide si non utilisé)_ |
 
+**Variables préconfigurées (pas besoin de les définir)** :
+- `MONGO_URL` : Configurée automatiquement pour utiliser le service MongoDB interne (`mongodb://mongodb:27017`)
+- `DB_NAME` : Base de données par défaut (`axis_audio_dashboard`)
+
 **Note importante :** Le frontend utilise maintenant des URLs relatives (`/api`), donc il n'y a plus besoin de configurer `REACT_APP_BACKEND_URL`. Nginx s'occupe automatiquement du proxy.
 
 #### Étape 5 : Déployer le stack
