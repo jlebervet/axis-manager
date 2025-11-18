@@ -153,7 +153,7 @@ EXPOSE 80
 # Docker/Portainer utilisera cette commande pour vérifier l'état du conteneur
 # On teste l'endpoint /api/health du backend
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost/api/health || exit 1
+    CMD curl -f http://127.0.0.1/api/health || exit 1
 
 # Commande de démarrage : lancer Supervisor
 # Supervisor va automatiquement démarrer Nginx et Uvicorn
