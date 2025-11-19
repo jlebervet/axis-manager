@@ -10,6 +10,53 @@
 # Pour arrêter : docker compose down
 # Pour voir les logs : docker compose logs -f
 # =============================================================================
+#
+# =============================================================================
+# CONFIGURATION DES VARIABLES D'ENVIRONNEMENT (PORTAINER)
+# =============================================================================
+# IMPORTANT : Les variables suivantes DOIVENT être définies avant le déploiement.
+#
+# Dans Portainer :
+# 1. Allez dans "Stacks" > "Add stack"
+# 2. Collez ce fichier compose.yaml dans l'éditeur
+# 3. Cliquez sur "Add an environment variable" pour chaque variable ci-dessous
+# 4. Ou utilisez un fichier .env uploadé
+#
+# Variables REQUISES (pas de valeur par défaut) :
+# --------------------------------------------
+# AXIS_API_BASE_URL       URL de votre serveur Axis Audio Manager Pro
+#                         Exemple : https://192.168.1.100:443
+#
+# AXIS_API_USERNAME       Nom d'utilisateur pour l'API Axis
+#                         Exemple : Dashboard
+#
+# AXIS_API_PASSWORD       Mot de passe pour l'API Axis
+#                         Exemple : your-secure-password
+#
+# Variables OPTIONNELLES (avec valeurs par défaut) :
+# -------------------------------------------------
+# AXIS_API_TIMEOUT        Timeout en secondes pour les requêtes API
+#                         Défaut : 30
+#
+# STYB_CLIENT_ID          Client ID pour Soundtrackyourbrand (optionnel)
+#                         Défaut : vide
+#
+# STYB_CLIENT_SECRET      Client Secret pour Soundtrackyourbrand (optionnel)
+#                         Défaut : vide
+#
+# Variables PRÉCONFIGURÉES (pas besoin de les définir) :
+# -----------------------------------------------------
+# MONGO_URL               URL MongoDB (utilise le service "mongodb" interne)
+#                         Valeur fixe : mongodb://mongodb:27017
+#
+# DB_NAME                 Nom de la base de données
+#                         Valeur fixe : axis_audio_dashboard
+#
+# NOTE : Si vous voulez utiliser une MongoDB externe, remplacez les valeurs
+#        hardcodées dans la section "environment" par ${MONGO_URL} et ${DB_NAME}
+#
+# NOTE IMPORTANTE : Ne JAMAIS committer de fichier .env avec des secrets réels !
+# =============================================================================
 
 # =============================================================================
 # SERVICES

@@ -139,6 +139,8 @@ STYB_CLIENT_SECRET=
 
 **⚠️ Important :** Ne committez JAMAIS ce fichier `.env` sur Git ! Il contient des secrets.
 
+**⚠️ Sécurité :** Si vous avez cloné ce projet depuis un repository qui contient des fichiers `.env` commités (erreur de sécurité), changez immédiatement tous les mots de passe exposés !
+
 ---
 
 ## Déploiement Local (Développement)
@@ -276,12 +278,18 @@ Cliquez sur **+ Add environment variable** et ajoutez :
 
 | Nom | Valeur | Exemple |
 |-----|--------|---------|
-| `AXIS_API_BASE_URL` | URL de votre Axis Manager | `https://192.168.1.100` |
-| `AXIS_API_USERNAME` | Nom d'utilisateur Axis | `admin` |
+| `AXIS_API_BASE_URL` | URL complète de votre Axis Manager (HTTPS + port) | `https://192.168.1.100:443` |
+| `AXIS_API_USERNAME` | Nom d'utilisateur Axis | `Dashboard` |
 | `AXIS_API_PASSWORD` | Mot de passe Axis | `votre_mot_de_passe` |
-| `AXIS_API_TIMEOUT` | Timeout en secondes | `30` |
+| `AXIS_API_TIMEOUT` | Timeout en secondes (optionnel) | `30` |
 | `STYB_CLIENT_ID` | (Optionnel) Client ID STYB | _(vide si non utilisé)_ |
 | `STYB_CLIENT_SECRET` | (Optionnel) Secret STYB | _(vide si non utilisé)_ |
+
+**Variables préconfigurées (pas besoin de les définir)** :
+- `MONGO_URL` : Configurée automatiquement pour utiliser le service MongoDB interne (`mongodb://mongodb:27017`)
+- `DB_NAME` : Base de données par défaut (`axis_audio_dashboard`)
+
+**Note importante :** Le frontend utilise maintenant des URLs relatives (`/api`), donc il n'y a plus besoin de configurer `REACT_APP_BACKEND_URL`. Nginx s'occupe automatiquement du proxy.
 
 #### Étape 5 : Déployer le stack
 
@@ -289,11 +297,24 @@ Cliquez sur **+ Add environment variable** et ajoutez :
 2. Attendez quelques secondes/minutes (téléchargement des images)
 3. Vérifiez que les 2 conteneurs sont en **running** (icône verte)
 
-#### Étape 6 : Accéder à l'application
+#### Étape 6 : Vérifier le déploiement
 
-Ouvrez votre navigateur : `http://ip-du-serveur`
+1. Dans Portainer, vérifiez que les conteneurs sont **healthy** (icône verte)
+   - Si le status est "starting", patientez 30-40 secondes
+
+2. Vérifiez les logs en cas de problème :
+   - Cliquez sur le conteneur → **Logs**
+
+3. Ouvrez votre navigateur : `http://ip-du-serveur`
 
 ✅ Votre application Axis Manager est maintenant en ligne !
+
+**Troubleshooting Healthcheck :**
+Si le container reste "unhealthy" :
+- Vérifiez que toutes les variables d'environnement sont bien configurées
+- Vérifiez que MongoDB a démarré (peut prendre 20-30 secondes)
+- Test manuel : `docker exec axis-manager-app curl http://localhost/api/health`
+- Consultez la section Troubleshooting ci-dessous pour plus de détails
 
 ---
 
@@ -592,7 +613,8 @@ docker stats
 
 **Symptômes :**
 - Le frontend React s'affiche mais ne récupère pas les données
-- Erreur réseau dans la console navigateur
+- Erreur réseau ou CORS dans la console navigateur
+- Erreur 404 sur les appels `/api/*`
 
 **Solutions :**
 
@@ -601,15 +623,18 @@ docker stats
    curl http://localhost/api/health
    ```
 
-2. Si vous êtes en développement, vérifiez que `REACT_APP_BACKEND_URL` est correct :
-   ```env
-   # Dans compose.dev.yaml
-   REACT_APP_BACKEND_URL: http://localhost:8001/api
-   ```
+2. **Si vous utilisez une ancienne image** : Le problème vient probablement d'un frontend avec URL hardcodée. Solution :
+   - Dans Portainer → Stacks → **Pull and redeploy** pour obtenir la dernière image
+   - La nouvelle image utilise des URLs relatives via nginx proxy
 
 3. Vérifiez la configuration Nginx :
    ```bash
    docker exec axis-manager-app nginx -t
+   ```
+
+4. En mode développement, assurez-vous que le proxy est configuré dans `frontend/package.json` :
+   ```json
+   "proxy": "http://localhost:8001"
    ```
 
 ---
@@ -701,8 +726,9 @@ Voici la liste complète des variables d'environnement disponibles :
 
 | Variable | Description | Valeur par défaut | Requis |
 |----------|-------------|-------------------|--------|
-| `REACT_APP_BACKEND_URL` | URL du backend API | Configuré par docker compose | ✅ Oui |
 | `DISABLE_HOT_RELOAD` | Désactiver le hot-reload (dev) | `false` | ❌ Non |
+
+**Note :** Le frontend utilise maintenant des URLs relatives (`/api`) en production. En développement, le proxy est configuré dans `package.json`. Plus besoin de `REACT_APP_BACKEND_URL` !
 
 ### MongoDB
 
@@ -748,6 +774,29 @@ docker compose up -d
 # Nettoyer Docker
 docker system prune -a
 ```
+
+---
+
+## Évolutions Futures
+
+### HTTPS et Let's Encrypt
+
+Pour sécuriser l'application en production, deux options sont envisagées :
+
+**Option 1 : Traefik (recommandé)**
+- Reverse proxy avec gestion automatique des certificats SSL
+- Renouvellement automatique Let's Encrypt
+- Configuration via labels Docker
+
+**Option 2 : Nginx + Certbot**
+- Intégration de Certbot dans le container existant
+- Configuration plus simple mais renouvellement manuel
+
+**Prérequis pour HTTPS :**
+- Nom de domaine pointant vers votre serveur
+- Ports 80 et 443 ouverts sur le firewall
+
+Cette fonctionnalité sera ajoutée dans une future version.
 
 ---
 

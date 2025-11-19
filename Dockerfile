@@ -33,6 +33,8 @@ COPY frontend/package.json frontend/yarn.lock ./
 RUN yarn install --frozen-lockfile --network-timeout 100000
 
 # Copier tout le code source du frontend
+# NOTE: Les fichiers .env sont exclus via .dockerignore pour éviter d'embarquer des secrets
+# Le frontend utilise des URLs relatives (/api) qui fonctionnent via le proxy nginx
 COPY frontend/ ./
 
 # Construire l'application React pour la production
@@ -96,10 +98,15 @@ COPY --from=backend-builder /root/.local /home/appuser/.local
 # Cela permet d'exécuter uvicorn et autres commandes Python installées
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+# Configurer PYTHONPATH pour que Python trouve les modules installés
+ENV PYTHONPATH=/home/appuser/.local/lib/python3.11/site-packages:$PYTHONPATH
+
 # Définir le répertoire de travail
 WORKDIR /app
 
 # Copier le code backend Python
+# NOTE: Les fichiers .env sont exclus via .dockerignore
+# Les variables d'environnement doivent être fournies au runtime via Docker Compose ou Portainer
 COPY backend/ ./backend/
 
 # Copier les fichiers statiques du frontend depuis le stage frontend-builder
